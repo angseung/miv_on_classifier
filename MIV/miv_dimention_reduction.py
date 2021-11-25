@@ -7,23 +7,33 @@ from MIV.miv_200324 import NotHavePredictMethodError, NotFittedYetError
 import numpy as np
 import scipy
 
+
+class NotHavePredictMethodError(Exception):
+    pass
+
+
+class NotFittedYetError(Exception):
+    pass
+
+
 class MIV:
-    def __init__(self, Model = None, threshold = 0.9, zeta = 0.1, score_ = None,
-                 is_clf = False):
-        self.Model = Model # This Object MUST HAVE "self.predict" Method
+    def __init__(self, Model=None, threshold=0.9, zeta=0.1, score=None, is_clf=False):
+        self.Model = Model  # This Object MUST HAVE "self.predict" Method
         self.threshold = threshold
         self.zeta = zeta
-        self.score_ = score_
-        self.is_clf = is_clf # is Classifier(True) OR Regressor(False)
+        self.score = score
+        self.is_clf = is_clf  # is Classifier(True) OR Regressor(False)
         self.is_fitted = False
 
     def fit(self, X, y):
         self.X = X
         self.y = y
 
-        #CHECK "Model" Object Has a "self.predict()" Method
+        # CHECK "Model" Object Has a "self.predict()" Method
         if "predict" not in dir(self.Model):
-            raise NotHavePredictMethodError('Object "Model" MUST HAVE "predict" Method.')
+            raise NotHavePredictMethodError(
+                'Object "Model" MUST HAVE "predict" Method.'
+            )
 
         # Modify Some Data, Calculate Impact Value, and Get Mean Impact Value.
         if self.is_clf:
@@ -36,9 +46,9 @@ class MIV:
             self.IV = np.zeros(X.shape)
 
             for i in range(num_features):
-                #Modify Data with "zeta" param
-                X_1[:, i] = X_1[:, i] * (1. + self.zeta)
-                X_2[:, i] = X_2[:, i] * (1. - self.zeta)
+                # Modify Data with "zeta" param
+                X_1[:, i] = X_1[:, i] * (1.0 + self.zeta)
+                X_2[:, i] = X_2[:, i] * (1.0 - self.zeta)
                 self.X_1_dbg[:, i] = X_1[:, i]
                 self.X_2_dbg[:, i] = X_2[:, i]
 
@@ -47,8 +57,8 @@ class MIV:
                 Y_2 = self.Model.predict_proba(X_2).max(axis=1)
 
                 ## Inverse sigmoid
-                Y_1 = -1 * np.log(1/Y_1 - 1)
-                Y_2 = -1 * np.log(1/Y_2 - 1)
+                Y_1 = -1 * np.log(1 / Y_1 - 1)
+                Y_2 = -1 * np.log(1 / Y_2 - 1)
 
                 self.IV[:, i] = Y_1 - Y_2
 
@@ -80,7 +90,7 @@ class MIV:
                 if cum_MIV >= self.threshold:
                     cum_MIV = cum_MIV - tmp_MIV
                     th_idx = i - 1
-                    break;
+                    break
 
             self.selected_idx = sel_idx[0 : th_idx + 1]
             self.selected = np.sort(self.selected_idx)
@@ -95,13 +105,13 @@ class MIV:
             self.IV = np.zeros(X.shape)
 
             for i in range(num_features):
-                #Modify Data with "zeta" param
-                X_1[:, i] = X_1[:, i] * (1. + self.zeta)
-                X_2[:, i] = X_2[:, i] * (1. - self.zeta)
+                # Modify Data with "zeta" param
+                X_1[:, i] = X_1[:, i] * (1.0 + self.zeta)
+                X_2[:, i] = X_2[:, i] * (1.0 - self.zeta)
                 self.X_1_dbg[:, i] = X_1[:, i]
                 self.X_2_dbg[:, i] = X_2[:, i]
 
-                #Calculate Impact Value
+                # Calculate Impact Value
                 Y_1 = self.Model.predict(X_1)
                 Y_2 = self.Model.predict(X_2)
                 self.IV[:, i] = Y_1 - Y_2
@@ -134,7 +144,7 @@ class MIV:
                 if cum_MIV >= self.threshold:
                     cum_MIV = cum_MIV - tmp_MIV
                     th_idx = i - 1
-                    break;
+                    break
 
             self.selected_idx = sel_idx[0 : th_idx + 1]
             self.selected = np.sort(self.selected_idx)
@@ -153,7 +163,6 @@ class MIV:
         else:
             raise NotFittedYetError("FIT Model First")
 
-
     def fit_transform(self, X, y):
         self.X = X
         self.y = y
@@ -164,6 +173,3 @@ class MIV:
         else:
             self.fit(X, y)
             return X[:, self.selected]
-
-
-
