@@ -2,10 +2,9 @@
 ##### KETI SoC Flatform Research Center
 ##### IM SEUNGWOO
 
-from sklearn.metrics import r2_score, recall_score, f1_score, mean_squared_error
-from MIV.miv_200324 import NotHavePredictMethodError, NotFittedYetError
 import numpy as np
 import scipy
+from sklearn.metrics import r2_score, recall_score, f1_score, mean_squared_error
 
 
 class NotHavePredictMethodError(Exception):
